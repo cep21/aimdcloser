@@ -16,9 +16,9 @@ cache:
 
 script:
   - if [ $TRAVIS_GO_VERSION == "1.12" ]; then
-      make setup_ci;
-      go mod verify;
-      go mod vendor && GO111MODULE=off PATH=$TRAVIS_BUILD_DIR/bin:$PATH make lint;
+      make setup_ci || exit 1;
+      go mod verify || exit 1;
+      go mod vendor && GO111MODULE=off PATH=$TRAVIS_BUILD_DIR/bin:$PATH make lint || exit 1;
       rm -rf vendor;
     fi
   - make build
