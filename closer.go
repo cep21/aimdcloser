@@ -23,7 +23,9 @@ type Closer struct {
 
 type OpenerConfig struct {
 	AdditiveIncrease       float64
+	// You *really* want this to be (0,1)
 	MultiplicativeDecrease float64
+	// You want this to be very fast at first, and rely on MultiplicativeDecrease to level out
 	InitialRate            float64
 	Burst                  int
 	CloseOnHappyDuration   time.Duration
@@ -49,8 +51,8 @@ func (o OpenerConfig) merge(other OpenerConfig) {
 
 var defaultConfig = OpenerConfig{
 	AdditiveIncrease:       .1,
-	MultiplicativeDecrease: .1,
-	InitialRate:            1,
+	MultiplicativeDecrease: .5,
+	InitialRate:            float64(time.Microsecond / time.Second),
 	Burst:                  10,
 	CloseOnHappyDuration:   time.Second * 5,
 }
