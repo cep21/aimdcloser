@@ -1,6 +1,7 @@
 package ratecloser
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -8,6 +9,10 @@ import (
 	"github.com/cep21/aimdcloser"
 	"github.com/cep21/circuit/v3"
 )
+
+func init() {
+	fmt.Println("This should fail lint")
+}
 
 func TestCloserConfig(t *testing.T) {
 	c := CloserConfig{}
