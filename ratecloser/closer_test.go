@@ -1,11 +1,11 @@
-package rateopener
+package ratecloser
 
 import (
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/cep21/aimdopener"
+	"github.com/cep21/aimdcloser"
 	"github.com/cep21/circuit/v3"
 )
 
@@ -53,7 +53,7 @@ func TestCloserFactory(t *testing.T) {
 
 func TestCloser_ShouldClose(t *testing.T) {
 	factory := CloserFactory(CloserConfig{
-		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, float64(time.Microsecond/time.Second), 10),
+		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, float64(time.Microsecond/time.Second), 10),
 		CloseOnHappyDuration: time.Second * 5,
 	})
 	t.Run("atstart", func(t *testing.T) {
@@ -104,7 +104,7 @@ func TestCloser_ShouldClose(t *testing.T) {
 
 func TestCloser_Allow(t *testing.T) {
 	factory := CloserFactory(CloserConfig{
-		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
 		CloseOnHappyDuration: time.Second * 5,
 	})
 	t.Run("atstart", func(t *testing.T) {
@@ -129,7 +129,7 @@ func TestCloser_Allow(t *testing.T) {
 
 func TestCloser_Opened(t *testing.T) {
 	factory := CloserFactory(CloserConfig{
-		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
 		CloseOnHappyDuration: time.Second * 5,
 	})
 	t.Run("rapidreset", func(t *testing.T) {
@@ -146,15 +146,15 @@ func TestCloser_Opened(t *testing.T) {
 
 func TestCloser_Success(t *testing.T) {
 	factory := CloserFactory(CloserConfig{
-		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
 		CloseOnHappyDuration: time.Second * 5,
 	})
 	t.Run("increases", func(t *testing.T) {
 		closer := factory().(*Closer)
 		now := time.Now()
-		startingRate := closer.Rater.(*aimdopener.AIMD).Rate()
+		startingRate := closer.Rater.(*aimdcloser.AIMD).Rate()
 		closer.Success(now, time.Millisecond)
-		endingRate := closer.Rater.(*aimdopener.AIMD).Rate()
+		endingRate := closer.Rater.(*aimdcloser.AIMD).Rate()
 		if endingRate <= startingRate {
 			t.Error("expected rate to increase with success")
 		}
@@ -163,15 +163,15 @@ func TestCloser_Success(t *testing.T) {
 
 func TestCloser_ErrFailure(t *testing.T) {
 	factory := CloserFactory(CloserConfig{
-		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
 		CloseOnHappyDuration: time.Second * 5,
 	})
 	t.Run("decrease", func(t *testing.T) {
 		closer := factory().(*Closer)
 		now := time.Now()
-		startingRate := closer.Rater.(*aimdopener.AIMD).Rate()
+		startingRate := closer.Rater.(*aimdcloser.AIMD).Rate()
 		closer.ErrFailure(now, time.Millisecond)
-		endingRate := closer.Rater.(*aimdopener.AIMD).Rate()
+		endingRate := closer.Rater.(*aimdcloser.AIMD).Rate()
 		if endingRate >= startingRate {
 			t.Error("expected rate to decrease with ErrFailure")
 		}
@@ -180,7 +180,7 @@ func TestCloser_ErrFailure(t *testing.T) {
 
 func TestCloser_Closed(t *testing.T) {
 	factory := CloserFactory(CloserConfig{
-		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
 		CloseOnHappyDuration: time.Second * 5,
 	})
 	t.Run("rapidreset", func(t *testing.T) {
@@ -197,15 +197,15 @@ func TestCloser_Closed(t *testing.T) {
 
 func TestCloser_ErrBadRequest(t *testing.T) {
 	factory := CloserFactory(CloserConfig{
-		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
 		CloseOnHappyDuration: time.Second * 5,
 	})
 	t.Run("same", func(t *testing.T) {
 		closer := factory().(*Closer)
 		now := time.Now()
-		startingRate := closer.Rater.(*aimdopener.AIMD).Rate()
+		startingRate := closer.Rater.(*aimdcloser.AIMD).Rate()
 		closer.ErrBadRequest(now, time.Millisecond)
-		endingRate := closer.Rater.(*aimdopener.AIMD).Rate()
+		endingRate := closer.Rater.(*aimdcloser.AIMD).Rate()
 		if endingRate != startingRate {
 			t.Error("expected rate to stay same with ErrBadRequest")
 		}
@@ -214,15 +214,15 @@ func TestCloser_ErrBadRequest(t *testing.T) {
 
 func TestCloser_ErrConcurrencyLimitReject(t *testing.T) {
 	factory := CloserFactory(CloserConfig{
-		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
 		CloseOnHappyDuration: time.Second * 5,
 	})
 	t.Run("same", func(t *testing.T) {
 		closer := factory().(*Closer)
 		now := time.Now()
-		startingRate := closer.Rater.(*aimdopener.AIMD).Rate()
+		startingRate := closer.Rater.(*aimdcloser.AIMD).Rate()
 		closer.ErrConcurrencyLimitReject(now)
-		endingRate := closer.Rater.(*aimdopener.AIMD).Rate()
+		endingRate := closer.Rater.(*aimdcloser.AIMD).Rate()
 		if endingRate != startingRate {
 			t.Error("expected rate to stay same with ErrConcurrencyLimitReject")
 		}
@@ -231,15 +231,15 @@ func TestCloser_ErrConcurrencyLimitReject(t *testing.T) {
 
 func TestCloser_ErrInterrupt(t *testing.T) {
 	factory := CloserFactory(CloserConfig{
-		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
 		CloseOnHappyDuration: time.Second * 5,
 	})
 	t.Run("same", func(t *testing.T) {
 		closer := factory().(*Closer)
 		now := time.Now()
-		startingRate := closer.Rater.(*aimdopener.AIMD).Rate()
+		startingRate := closer.Rater.(*aimdcloser.AIMD).Rate()
 		closer.ErrInterrupt(now, time.Millisecond)
-		endingRate := closer.Rater.(*aimdopener.AIMD).Rate()
+		endingRate := closer.Rater.(*aimdcloser.AIMD).Rate()
 		if endingRate != startingRate {
 			t.Error("expected rate to stay same with ErrInterrupt")
 		}
@@ -248,15 +248,15 @@ func TestCloser_ErrInterrupt(t *testing.T) {
 
 func TestCloser_ErrShortCircuit(t *testing.T) {
 	factory := CloserFactory(CloserConfig{
-		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
 		CloseOnHappyDuration: time.Second * 5,
 	})
 	t.Run("same", func(t *testing.T) {
 		closer := factory().(*Closer)
 		now := time.Now()
-		startingRate := closer.Rater.(*aimdopener.AIMD).Rate()
+		startingRate := closer.Rater.(*aimdcloser.AIMD).Rate()
 		closer.ErrShortCircuit(now)
-		endingRate := closer.Rater.(*aimdopener.AIMD).Rate()
+		endingRate := closer.Rater.(*aimdcloser.AIMD).Rate()
 		if endingRate != startingRate {
 			t.Error("expected rate to stay same with ErrShortCircuit")
 		}
@@ -265,15 +265,15 @@ func TestCloser_ErrShortCircuit(t *testing.T) {
 
 func TestCloser_ErrTimeout(t *testing.T) {
 	factory := CloserFactory(CloserConfig{
-		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
 		CloseOnHappyDuration: time.Second * 5,
 	})
 	t.Run("same", func(t *testing.T) {
 		closer := factory().(*Closer)
 		now := time.Now()
-		startingRate := closer.Rater.(*aimdopener.AIMD).Rate()
+		startingRate := closer.Rater.(*aimdcloser.AIMD).Rate()
 		closer.ErrTimeout(now, time.Second)
-		endingRate := closer.Rater.(*aimdopener.AIMD).Rate()
+		endingRate := closer.Rater.(*aimdcloser.AIMD).Rate()
 		if endingRate >= startingRate {
 			t.Error("expected rate to decrease with ErrTimeout")
 		}
@@ -304,7 +304,7 @@ func ExampleCloserFactory() {
 
 func BenchmarkCloser_Allow_10(b *testing.B) {
 	factory := CloserFactory(CloserConfig{
-		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
 		CloseOnHappyDuration: time.Second * 5,
 	})
 	b.ReportAllocs()
@@ -327,7 +327,7 @@ func BenchmarkCloser_Allow_10(b *testing.B) {
 
 func BenchmarkCloser_AllowSuccess_10(b *testing.B) {
 	factory := CloserFactory(CloserConfig{
-		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
 		CloseOnHappyDuration: time.Second * 5,
 	})
 	b.ReportAllocs()
@@ -351,7 +351,7 @@ func BenchmarkCloser_AllowSuccess_10(b *testing.B) {
 
 func BenchmarkCloser_AllowSuccessClose_10(b *testing.B) {
 	factory := CloserFactory(CloserConfig{
-		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
 		CloseOnHappyDuration: time.Second * 5,
 	})
 	b.ReportAllocs()
@@ -376,7 +376,7 @@ func BenchmarkCloser_AllowSuccessClose_10(b *testing.B) {
 
 func BenchmarkCloser_AllowFailureClose_10(b *testing.B) {
 	factory := CloserFactory(CloserConfig{
-		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
 		CloseOnHappyDuration: time.Second * 5,
 	})
 	b.ReportAllocs()

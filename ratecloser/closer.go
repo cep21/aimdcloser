@@ -1,19 +1,19 @@
-package rateopener
+package ratecloser
 
 import (
 	"sync"
 	"time"
 
-	"github.com/cep21/aimdopener"
+	"github.com/cep21/aimdcloser"
 
 	"github.com/cep21/circuit/v3"
 )
 
-// Closer is a rateopener closer that allows requests according to a rate limiter.
+// Closer is a circuit closer that allows requests according to a rate limiter.
 type Closer struct {
 	// Rater is the rate limiter of this closer
-	Rater aimdopener.RateLimiter
-	// CloseOnHappyDuration is how long we should see zero failing requests before we close the rateopener.
+	Rater aimdcloser.RateLimiter
+	// CloseOnHappyDuration is how long we should see zero failing requests before we close the ratecloser.
 	CloseOnHappyDuration time.Duration
 	lastFailedReserve    time.Time
 	mu                   sync.Mutex
@@ -23,8 +23,8 @@ type Closer struct {
 type CloserConfig struct {
 	// RateLimiter constructs new rate limiters for circuits.  We default to a reasonable AIMD configuration.
 	// That configuration happens to be AIMDConstructor(.1, .5, float64(time.Microsecond/time.Second), 10) right now.
-	RateLimiter func() aimdopener.RateLimiter
-	// CloseOnHappyDuration gives a duration that passing requests cause the rateopener to close.
+	RateLimiter func() aimdcloser.RateLimiter
+	// CloseOnHappyDuration gives a duration that passing requests cause the ratecloser to close.
 	// We default to a reasonable short value.  It happens to be 10 seconds right now.
 	CloseOnHappyDuration time.Duration
 }
@@ -39,11 +39,11 @@ func (o *CloserConfig) merge(other CloserConfig) {
 }
 
 var defaultConfig = CloserConfig{
-	RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+	RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
 	CloseOnHappyDuration: time.Second * 10,
 }
 
-// CloserFactory is injectable into a rateopener's configuration to create a factory of rate limit closers for a rateopener.
+// CloserFactory is injectable into a ratecloser's configuration to create a factory of rate limit closers for a ratecloser.
 func CloserFactory(conf CloserConfig) func() circuit.OpenToClosed {
 	return func() circuit.OpenToClosed {
 		c := conf
@@ -111,7 +111,7 @@ func (c *Closer) Opened(now time.Time) {
 	c.Rater.Reset(now)
 }
 
-// ShouldClose returns true if the rateopener has been successful for CloseOnHappyDuration amount of time.
+// ShouldClose returns true if the ratecloser has been successful for CloseOnHappyDuration amount of time.
 func (c *Closer) ShouldClose(now time.Time) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -130,5 +130,5 @@ func (c *Closer) Allow(now time.Time) bool {
 	return ret
 }
 
-// Type check we are implementing the correct types for our rateopener
+// Type check we are implementing the correct types for our ratecloser
 var _ circuit.OpenToClosed = &Closer{}

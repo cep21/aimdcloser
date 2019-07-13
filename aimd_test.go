@@ -1,4 +1,4 @@
-package aimdopener
+package aimdcloser
 
 import (
 	"errors"

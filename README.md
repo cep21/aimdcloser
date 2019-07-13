@@ -1,9 +1,9 @@
-# AIMDopener
-[![Build Status](https://travis-ci.org/cep21/aimdopener.svg?branch=master)](https://travis-ci.org/cep21/aimdopener)
-[![GoDoc](https://godoc.org/github.com/cep21/aimdopener?status.svg)](https://godoc.org/github.com/cep21/aimdopener)
-[![Coverage Status](https://coveralls.io/repos/github/cep21/aimdopener/badge.svg)](https://coveralls.io/github/cep21/aimdopener)
+# aimdcloser
+[![Build Status](https://travis-ci.org/cep21/aimdcloser.svg?branch=master)](https://travis-ci.org/cep21/aimdcloser)
+[![GoDoc](https://godoc.org/github.com/cep21/aimdcloser?status.svg)](https://godoc.org/github.com/cep21/aimdcloser)
+[![Coverage Status](https://coveralls.io/repos/github/cep21/aimdcloser/badge.svg)](https://coveralls.io/github/cep21/aimdcloser)
 
-Aimdopener is an opener implementation for [github.com/cep21/circuit](https://github.com/cep21/circuit).
+aimdcloser is an opener implementation for [github.com/cep21/circuit](https://github.com/cep21/circuit).
 It is a closer that increases how many requests it allows in an opened circuit according to 
 [Additive increase/multiplicative decrease](https://en.wikipedia.org/wiki/Additive_increase/multiplicative_decrease)
 algorithm.  The circuit closes when for a configured duration:
@@ -47,11 +47,11 @@ Run on my mac.
     < go test -bench .
     goos: darwin
     goarch: amd64
-    pkg: github.com/cep21/aimdopener/rateopener
+    pkg: github.com/cep21/aimdcloser/rateopener
     BenchmarkCloser_Allow_10-16                	10000000	       155 ns/op	       0 B/op	       0 allocs/op
     BenchmarkCloser_AllowSuccess_10-16         	 5000000	       392 ns/op	       0 B/op	       0 allocs/op
     BenchmarkCloser_AllowSuccessClose_10-16    	 3000000	       480 ns/op	       0 B/op	       0 allocs/op
     BenchmarkCloser_AllowFailureClose_10-16    	 3000000	       513 ns/op	       0 B/op	       0 allocs/op
     PASS
-    ok  	github.com/cep21/aimdopener/rateopener	8.108s
+    ok  	github.com/cep21/aimdcloser/rateopener	8.108s
 ```

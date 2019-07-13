@@ -1,4 +1,4 @@
-module github.com/cep21/aimdopener
+module github.com/cep21/aimdcloser
 
 go 1.10
 
