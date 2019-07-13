@@ -38,3 +38,20 @@ Have your manager use a `rateopener.CloserFactory` and your circuits will be cre
         // Output:
     }
 ```
+
+# Benchmarks
+
+Run on my mac.
+
+```
+    < go test -bench .
+    goos: darwin
+    goarch: amd64
+    pkg: github.com/cep21/aimdopener/rateopener
+    BenchmarkCloser_Allow_10-16                	10000000	       155 ns/op	       0 B/op	       0 allocs/op
+    BenchmarkCloser_AllowSuccess_10-16         	 5000000	       392 ns/op	       0 B/op	       0 allocs/op
+    BenchmarkCloser_AllowSuccessClose_10-16    	 3000000	       480 ns/op	       0 B/op	       0 allocs/op
+    BenchmarkCloser_AllowFailureClose_10-16    	 3000000	       513 ns/op	       0 B/op	       0 allocs/op
+    PASS
+    ok  	github.com/cep21/aimdopener/rateopener	8.108s
+```

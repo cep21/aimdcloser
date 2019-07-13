@@ -5,7 +5,7 @@ build:
 
 # Run unit tests
 test:
-	env "GORACE=halt_on_error=1" go test -v -race ./...
+	env "GORACE=halt_on_error=1" go test -benchtime 1ns -race -bench . -v ./...
 
 # Run unit tests
 test_coverage:

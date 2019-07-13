@@ -1,6 +1,7 @@
 package rateopener
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -286,7 +287,7 @@ func ExampleCloserFactory() {
 			func(_ string) circuit.Config {
 				return circuit.Config{
 					General: circuit.GeneralConfig{
-						OpenToClosedFactory:CloserFactory(CloserConfig{
+						OpenToClosedFactory: CloserFactory(CloserConfig{
 							CloseOnHappyDuration: time.Second * 10,
 						}),
 					},
@@ -299,4 +300,101 @@ func ExampleCloserFactory() {
 	// The closer should be a closer of this type
 	_ = c.OpenToClose.(*Closer)
 	// Output:
+}
+
+func BenchmarkCloser_Allow_10(b *testing.B) {
+	factory := CloserFactory(CloserConfig{
+		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		CloseOnHappyDuration: time.Second * 5,
+	})
+	b.ReportAllocs()
+	closer := factory()
+	now := time.Now()
+	closer.Opened(now)
+	wg := sync.WaitGroup{}
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := 0; i < b.N/10; i++ {
+				now = now.Add(time.Nanosecond)
+				closer.Allow(now)
+			}
+		}()
+	}
+	wg.Wait()
+}
+
+func BenchmarkCloser_AllowSuccess_10(b *testing.B) {
+	factory := CloserFactory(CloserConfig{
+		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		CloseOnHappyDuration: time.Second * 5,
+	})
+	b.ReportAllocs()
+	closer := factory()
+	now := time.Now()
+	closer.Opened(now)
+	wg := sync.WaitGroup{}
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := 0; i < b.N/10; i++ {
+				now = now.Add(time.Nanosecond)
+				closer.Allow(now)
+				closer.Success(now, time.Millisecond)
+			}
+		}()
+	}
+	wg.Wait()
+}
+
+func BenchmarkCloser_AllowSuccessClose_10(b *testing.B) {
+	factory := CloserFactory(CloserConfig{
+		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		CloseOnHappyDuration: time.Second * 5,
+	})
+	b.ReportAllocs()
+	closer := factory()
+	now := time.Now()
+	closer.Opened(now)
+	wg := sync.WaitGroup{}
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := 0; i < b.N/10; i++ {
+				now = now.Add(time.Nanosecond)
+				closer.Allow(now)
+				closer.Success(now, time.Millisecond)
+				closer.ShouldClose(now)
+			}
+		}()
+	}
+	wg.Wait()
+}
+
+func BenchmarkCloser_AllowFailureClose_10(b *testing.B) {
+	factory := CloserFactory(CloserConfig{
+		RateLimiter:          aimdopener.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
+		CloseOnHappyDuration: time.Second * 5,
+	})
+	b.ReportAllocs()
+	closer := factory()
+	now := time.Now()
+	closer.Opened(now)
+	wg := sync.WaitGroup{}
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := 0; i < b.N/10; i++ {
+				now = now.Add(time.Nanosecond)
+				closer.Allow(now)
+				closer.ErrFailure(now, time.Millisecond)
+				closer.ShouldClose(now)
+			}
+		}()
+	}
+	wg.Wait()
 }
