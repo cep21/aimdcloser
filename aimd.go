@@ -39,6 +39,8 @@ type AIMD struct {
 	l *rate.Limiter
 }
 
+// AIMDConstructor constructs rate limiters according to the given parameters.  See documentation for AIMD for
+// what each parameter means.
 func AIMDConstructor(additiveIncrease float64, multiplicativeDecrease float64, initialRate float64, burst int) func() RateLimiter {
 	return func() RateLimiter {
 		return &AIMD{
@@ -50,6 +52,7 @@ func AIMDConstructor(additiveIncrease float64, multiplicativeDecrease float64, i
 	}
 }
 
+// Reset the RateLimiter back to the initial rate and burst
 func (a *AIMD) Reset(now time.Time) {
 	a.l = rate.NewLimiter(rate.Limit(a.InitialRate), a.Burst)
 }
@@ -60,16 +63,20 @@ func (a *AIMD) init(now time.Time) {
 	}
 }
 
+// OnFailure changes the limiter to decrease the current limit by MultiplicativeDecrease
 func (a *AIMD) OnFailure(now time.Time) {
 	a.init(now)
 	a.l.SetLimitAt(now, rate.Limit(float64(a.l.Limit())*a.MultiplicativeDecrease))
 }
 
+// AttemptReserve tries to reserve a request inside the current time window.  Returns if the rate limiter allows
+// you to reserve a request.
 func (a *AIMD) AttemptReserve(now time.Time) bool {
 	a.init(now)
 	return a.l.AllowN(now, 1)
 }
 
+// Rate returns the current rate.
 func (a *AIMD) Rate() float64 {
 	if a.l == nil {
 		if a.InitialRate == 0 {
@@ -80,6 +87,7 @@ func (a *AIMD) Rate() float64 {
 	return float64(a.l.Limit())
 }
 
+// OnSuccess increases the reserved limit for this period.
 func (a *AIMD) OnSuccess(now time.Time) {
 	a.init(now)
 	a.l.SetLimitAt(now, rate.Limit(float64(a.l.Limit())+a.AdditiveIncrease))
