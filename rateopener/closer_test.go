@@ -220,7 +220,7 @@ func TestCloser_ErrConcurrencyLimitReject(t *testing.T) {
 		closer := factory().(*Closer)
 		now := time.Now()
 		startingRate := closer.Rater.(*aimdopener.AIMD).Rate()
-		closer.ErrBadRequest(now, time.Millisecond)
+		closer.ErrConcurrencyLimitReject(now)
 		endingRate := closer.Rater.(*aimdopener.AIMD).Rate()
 		if endingRate != startingRate {
 			t.Error("expected rate to stay same with ErrConcurrencyLimitReject")
