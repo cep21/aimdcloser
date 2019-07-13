@@ -7,6 +7,18 @@ import (
 	"golang.org/x/time/rate"
 )
 
+// RateLimiter is any object that can dynamically alter its reservation rate to allow more or less requests over time.
+type RateLimiter interface {
+	// OnFailure is triggered each time we should lower our request rate.
+	OnFailure(now time.Time)
+	// OnSuccess is triggered each time we should increase our request rate.
+	OnSuccess(now time.Time)
+	// AttemptReserve is called when the application wants to ask if it should allow a request.
+	AttemptReserve(now time.Time) bool
+	// Reset the internal configuration of the rate limiter back to defaults.
+	Reset(now time.Time)
+}
+
 // AIMD is https://en.wikipedia.org/wiki/Additive_increase/multiplicative_decrease
 // It is *NOT* thread safe
 type AIMD struct {

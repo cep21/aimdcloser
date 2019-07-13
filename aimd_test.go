@@ -16,6 +16,13 @@ func equalFloat(t *testing.T, expected float64, given float64) {
 	}
 }
 
+func equalInt(t *testing.T, expected int, given int) {
+	t.Helper()
+	if expected != given {
+		t.Errorf("Unexpected value.  Expected %d Given %d", expected, given)
+	}
+}
+
 func expect(t *testing.T, b bool, msg string) {
 	t.Helper()
 	if !b {
@@ -28,6 +35,17 @@ func expectNilErr(t *testing.T, err error) {
 	if err != nil {
 		t.Error(err.Error())
 	}
+}
+
+func TestAIMDConstructor(t *testing.T) {
+	c := AIMDConstructor(10, .1, 10, 10)
+	r := c().(*AIMD)
+	equalFloat(t, 10, r.AdditiveIncrease)
+	equalFloat(t, .1, r.MultiplicativeDecrease)
+	equalFloat(t, 10, r.InitialRate)
+	equalInt(t, 10, r.Burst)
+	equalFloat(t, 10, r.Rate())
+
 }
 
 func TestAIMDempty(t *testing.T) {
