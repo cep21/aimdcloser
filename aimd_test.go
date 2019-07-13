@@ -30,20 +30,19 @@ func expectNilErr(t *testing.T, err error) {
 	}
 }
 
-
 func TestAIMDempty(t *testing.T) {
 	a := AIMD{}
-	equalFloat(t, 1, a.Rate())
+	equalFloat(t, math.Inf(1), a.Rate())
 }
 
 func TestAIMDNormalRate(t *testing.T) {
 	a := AIMD{
 		// Allow burst item every half second
 		InitialRate: 2,
-		Burst: 1,
+		Burst:       1,
 	}
 	now := time.Now()
-	for i :=0;i<10;i++ {
+	for i := 0; i < 10; i++ {
 		expect(t, a.AttemptReserve(now), "expected to be able to reserve")
 		expect(t, !a.AttemptReserve(now), "expected to not be able to reserve")
 		now = now.Add(time.Second / 2)
@@ -54,9 +53,9 @@ func TestAIMDNormalRate(t *testing.T) {
 func TestAIMDFailures(t *testing.T) {
 	a := AIMD{
 		// Allow burst item every half second
-		InitialRate: 2,
-		Burst: 1,
-		AdditiveIncrease: .1,
+		InitialRate:            2,
+		Burst:                  1,
+		AdditiveIncrease:       .1,
 		MultiplicativeDecrease: .9,
 	}
 	now := time.Now()
@@ -64,14 +63,14 @@ func TestAIMDFailures(t *testing.T) {
 	a.OnFailure(now)
 	a.OnFailure(now)
 	a.OnFailure(now)
-	equalFloat(t, a.Rate(), 2 * .9 * .9 * .9)
+	equalFloat(t, a.Rate(), 2*.9*.9*.9)
 }
 
 type RateLimitedService struct {
-	ProcessRate time.Duration
+	ProcessRate   time.Duration
 	requestBuffer chan struct{}
 
-	wg sync.WaitGroup
+	wg   sync.WaitGroup
 	done chan struct{}
 }
 
@@ -83,7 +82,7 @@ func (r *RateLimitedService) Close() error {
 
 func (r *RateLimitedService) GiveRequest() error {
 	select {
-	case <- r.done:
+	case <-r.done:
 		return errors.New("done")
 	case r.requestBuffer <- struct{}{}:
 		return nil
@@ -99,13 +98,13 @@ func (r *RateLimitedService) Process() {
 		defer r.wg.Done()
 		for {
 			select {
-			case <- r.done:
+			case <-r.done:
 				return
-			case <- time.After(r.ProcessRate):
+			case <-time.After(r.ProcessRate):
 				select {
-				case <- r.done:
+				case <-r.done:
 					return
-				case <- r.requestBuffer:
+				case <-r.requestBuffer:
 				}
 			}
 		}
@@ -114,22 +113,22 @@ func (r *RateLimitedService) Process() {
 
 func TestAIMDLevelingOut(t *testing.T) {
 	// This test is really too random to test for, but I expect something like 10 req / sec in the final rate
-	t.Skip("Just for experimentation")
+	//t.Skip("Just for experimentation")
 	s := RateLimitedService{
-		ProcessRate: time.Millisecond * 100,
+		ProcessRate:   time.Millisecond * 100,
 		requestBuffer: make(chan struct{}, 10),
 	}
 	s.Process()
 	a := AIMD{
-		InitialRate: float64(time.Second / time.Microsecond),
-		Burst: 10,
-		AdditiveIncrease: 1,
+		InitialRate:            float64(time.Second / time.Microsecond),
+		Burst:                  10,
+		AdditiveIncrease:       1,
 		MultiplicativeDecrease: .5,
 	}
 	errs := 0
 	success := 0
 	a.OnFailure(time.Now())
-	for start := time.Now(); time.Since(start) < time.Second * 15; {
+	for start := time.Now(); time.Since(start) < time.Second*3; {
 		// 1000-ish requests / sec
 		time.Sleep(time.Millisecond)
 		if a.AttemptReserve(time.Now()) {
@@ -143,18 +142,18 @@ func TestAIMDLevelingOut(t *testing.T) {
 		}
 	}
 	expectNilErr(t, s.Close())
-	t.Logf("Ration of %d / %d = %f", errs, errs + success, float64(errs) / (float64(errs + success)))
+	t.Logf("Ration of %d / %d = %f", errs, errs+success, float64(errs)/(float64(errs+success)))
 	t.Logf("final rate was %f", a.Rate())
 }
 
 func TestAIMDBurst(t *testing.T) {
 	a := AIMD{
 		InitialRate: 1,
-		Burst: 10,
+		Burst:       10,
 	}
 
 	now := time.Now()
-	for i :=0;i<a.Burst;i++ {
+	for i := 0; i < a.Burst; i++ {
 		if !a.AttemptReserve(now) {
 			t.Errorf("expected burst at %d", i)
 		}
@@ -164,7 +163,7 @@ func TestAIMDBurst(t *testing.T) {
 	}
 
 	// Almost at the end of the period
-	now = now.Add(time.Second - time.Nanosecond * 2)
+	now = now.Add(time.Second - time.Nanosecond*2)
 	if a.AttemptReserve(now) {
 		t.Error("expected to not burst at end of period")
 	}

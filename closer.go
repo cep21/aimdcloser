@@ -10,8 +10,8 @@ import (
 type RateLimiter interface {
 	OnFailure(now time.Time)
 	OnSuccess(now time.Time)
-	Reset(now time.Time)
 	AttemptReserve(now time.Time) bool
+	Reset(now time.Time)
 }
 
 type Closer struct {
@@ -22,39 +22,24 @@ type Closer struct {
 }
 
 type OpenerConfig struct {
-	AdditiveIncrease       float64
-	// You *really* want this to be (0,1)
-	MultiplicativeDecrease float64
-	// You want this to be very fast at first, and rely on MultiplicativeDecrease to level out
-	InitialRate            float64
-	Burst                  int
-	CloseOnHappyDuration   time.Duration
+	// RateLimiter constructs new rate limiters for circuits.
+	RateLimiter func() RateLimiter
+	// CloseOnHappyDuration gives a duration that passing requests cause the circuit to close.
+	CloseOnHappyDuration time.Duration
 }
 
-func (o OpenerConfig) merge(other OpenerConfig) {
-	if o.AdditiveIncrease == 0 {
-		o.AdditiveIncrease = other.AdditiveIncrease
-	}
-	if o.MultiplicativeDecrease == 0 {
-		o.MultiplicativeDecrease = other.MultiplicativeDecrease
-	}
-	if o.InitialRate == 0 {
-		o.InitialRate = other.InitialRate
-	}
-	if o.Burst == 0 {
-		o.Burst = other.Burst
-	}
+func (o *OpenerConfig) merge(other OpenerConfig) {
 	if o.CloseOnHappyDuration == 0 {
 		o.CloseOnHappyDuration = other.CloseOnHappyDuration
+	}
+	if o.RateLimiter == nil {
+		o.RateLimiter = other.RateLimiter
 	}
 }
 
 var defaultConfig = OpenerConfig{
-	AdditiveIncrease:       .1,
-	MultiplicativeDecrease: .5,
-	InitialRate:            float64(time.Microsecond / time.Second),
-	Burst:                  10,
-	CloseOnHappyDuration:   time.Second * 5,
+	RateLimiter:          AIMDConstructor(.1, .5, float64(time.Microsecond/time.Second), 10),
+	CloseOnHappyDuration: time.Second * 5,
 }
 
 func CloserFactory(conf OpenerConfig) func() circuit.OpenToClosed {
@@ -62,13 +47,9 @@ func CloserFactory(conf OpenerConfig) func() circuit.OpenToClosed {
 		c := conf
 		c.merge(defaultConfig)
 		return &Closer{
-			Rater: &AIMD{
-				AdditiveIncrease:       c.AdditiveIncrease,
-				MultiplicativeDecrease: c.MultiplicativeDecrease,
-				InitialRate:            c.InitialRate,
-				Burst:                  c.Burst,
-			},
+			Rater:                c.RateLimiter(),
 			CloseOnHappyDuration: c.CloseOnHappyDuration,
+			lastFailedReserve:    time.Now(),
 		}
 	}
 }

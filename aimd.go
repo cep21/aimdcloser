@@ -10,18 +10,32 @@ import (
 // AIMD is https://en.wikipedia.org/wiki/Additive_increase/multiplicative_decrease
 // It is *NOT* thread safe
 type AIMD struct {
-	// How many requests / sec are allowed in addition when a success happens
+	// How many requests / sec are allowed in addition when a success happens.  A default o zero
+	// does not increase the rate.
 	AdditiveIncrease float64
-	// What % (0.0, 1.0) of requests to allow fewer of on a failure.
+	// What % (0.0, 1.0) of requests to allow fewer of on a failure.  A default of zero
+	// does not decrease the rate.
 	MultiplicativeDecrease float64
-	// The initial rate of requests / sec to set an AIMD at when reset
-	// Default of zero means infinite
+	// The initial rate of requests / sec to set an AIMD at when reset.
+	// Default of zero means infinite bursts per second.  However, with a burst of zero it is zero
 	InitialRate float64
 	// Allow Burst limits in the period
-	// Default 0 turns off
+	// Default 0 turns off AIMD entirely.
 	Burst int
 
+	// TODO: We may want to implement some of this ourselves.  Use and optimize later
 	l *rate.Limiter
+}
+
+func AIMDConstructor(additiveIncrease float64, multiplicativeDecrease float64, initialRate float64, burst int) func() RateLimiter {
+	return func() RateLimiter {
+		return &AIMD{
+			AdditiveIncrease:       additiveIncrease,
+			MultiplicativeDecrease: multiplicativeDecrease,
+			InitialRate:            initialRate,
+			Burst:                  burst,
+		}
+	}
 }
 
 func (a *AIMD) Reset(now time.Time) {
