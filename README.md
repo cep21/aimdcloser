@@ -13,7 +13,7 @@ algorithm.  The circuit closes when for a configured duration:
 
 # Usage
 
-Have your manager use a `rateopener.CloserFactory` and your circuits will be created of this type.
+Have your manager use a `ratecloser.CloserFactory` and your circuits will be created of this type.
 
 ```go
     func ExampleCloserFactory() {
@@ -47,11 +47,11 @@ Run on my mac.
     < go test -bench .
     goos: darwin
     goarch: amd64
-    pkg: github.com/cep21/aimdcloser/rateopener
+    pkg: github.com/cep21/aimdcloser/ratecloser
     BenchmarkCloser_Allow_10-16                	10000000	       155 ns/op	       0 B/op	       0 allocs/op
     BenchmarkCloser_AllowSuccess_10-16         	 5000000	       392 ns/op	       0 B/op	       0 allocs/op
     BenchmarkCloser_AllowSuccessClose_10-16    	 3000000	       480 ns/op	       0 B/op	       0 allocs/op
     BenchmarkCloser_AllowFailureClose_10-16    	 3000000	       513 ns/op	       0 B/op	       0 allocs/op
     PASS
-    ok  	github.com/cep21/aimdcloser/rateopener	8.108s
+    ok  	github.com/cep21/aimdcloser/ratecloser	8.108s
 ```
