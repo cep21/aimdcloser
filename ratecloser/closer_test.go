@@ -9,13 +9,6 @@ import (
 	"github.com/cep21/circuit/v3"
 )
 
-func init() {
-	// Compile test to verify we implement the correct type
-	_ = circuit.GeneralConfig{
-		OpenToClosedFactory: CloserFactory(defaultConfig),
-	}
-}
-
 func TestCloserConfig(t *testing.T) {
 	c := CloserConfig{}
 	c.merge(defaultConfig)
@@ -28,6 +21,10 @@ func TestCloserConfig(t *testing.T) {
 }
 
 func TestCloserFactory(t *testing.T) {
+	// Compile test to verify we implement the correct type for circuit.
+	_ = circuit.GeneralConfig{
+		OpenToClosedFactory: CloserFactory(defaultConfig),
+	}
 	t.Run("default", func(t *testing.T) {
 		cfg := CloserConfig{}
 		factory := CloserFactory(cfg)
