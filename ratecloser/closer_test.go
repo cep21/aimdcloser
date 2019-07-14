@@ -277,28 +277,6 @@ func TestCloser_ErrTimeout(t *testing.T) {
 	})
 }
 
-func ExampleCloserFactory() {
-	// Tell your circuit manager to use the rate limited closer
-	m := circuit.Manager{
-		DefaultCircuitProperties: []circuit.CommandPropertiesConstructor{
-			func(_ string) circuit.Config {
-				return circuit.Config{
-					General: circuit.GeneralConfig{
-						OpenToClosedFactory: CloserFactory(CloserConfig{
-							CloseOnHappyDuration: time.Second * 10,
-						}),
-					},
-				}
-			},
-		},
-	}
-	// Make circuit from manager
-	c := m.MustCreateCircuit("example_circuit")
-	// The closer should be a closer of this type
-	_ = c.OpenToClose.(*Closer)
-	// Output:
-}
-
 func BenchmarkCloser_Allow_10(b *testing.B) {
 	factory := CloserFactory(CloserConfig{
 		RateLimiter:          aimdcloser.AIMDConstructor(.1, .5, 1/time.Microsecond.Seconds(), 10),
