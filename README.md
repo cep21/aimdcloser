@@ -3,7 +3,7 @@
 [![GoDoc](https://godoc.org/github.com/cep21/aimdcloser?status.svg)](https://godoc.org/github.com/cep21/aimdcloser)
 [![Coverage Status](https://coveralls.io/repos/github/cep21/aimdcloser/badge.svg)](https://coveralls.io/github/cep21/aimdcloser)
 
-aimdcloser is an opener implementation for [github.com/cep21/circuit](https://github.com/cep21/circuit).
+aimdcloser is a closer implementation for [github.com/cep21/circuit](https://github.com/cep21/circuit).
 It is a closer that increases how many requests it allows in an opened circuit according to 
 [Additive increase/multiplicative decrease](https://en.wikipedia.org/wiki/Additive_increase/multiplicative_decrease)
 algorithm.  The circuit closes when for a configured duration:
